@@ -1,0 +1,53 @@
+@host = https://localhost:7051
+
+### ---------- Word types ----------
+GET {{host}}/api/WordType
+
+###
+POST {{host}}/api/WordType
+Content-Type: application/json
+
+{ "name": "phrasal verb" }
+
+### ---------- Topics ----------
+GET {{host}}/api/Topic
+
+###
+POST {{host}}/api/Topic
+Content-Type: application/json
+
+{ "name": "Travel" }
+
+### ---------- Vocabulary ----------
+GET {{host}}/api/Vocabulary
+
+### Filter by topic / word type / search text
+GET {{host}}/api/Vocabulary?topicId=1&search=app
+
+###
+GET {{host}}/api/Vocabulary/1
+
+###
+POST {{host}}/api/Vocabulary
+Content-Type: application/json
+
+{
+  "word": "apple",
+  "meaning": "quả táo",
+  "wordTypeId": 1,
+  "topicId": 1
+}
+
+###
+PUT {{host}}/api/Vocabulary/1
+Content-Type: application/json
+
+{
+  "word": "apple",
+  "meaning": "quả táo (a round fruit)",
+  "wordTypeId": 1,
+  "topicId": 1
+}
+
+###
+DELETE {{host}}/api/Vocabulary/1

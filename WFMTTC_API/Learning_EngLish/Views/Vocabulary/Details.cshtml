@@ -1,0 +1,42 @@
+@model Learning_EngLish.Models.Vocabulary
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Vocabulary</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Word)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Word)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Meaning)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Meaning)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Topic)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Topic.TopicId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.WordType)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.WordType.WordTypeId)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.VocabularyId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

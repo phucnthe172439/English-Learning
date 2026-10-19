@@ -55,3 +55,83 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# =============================================
+# Visual Studio / Rider
+# =============================================
+.vs/
+*.user
+*.suo
+*.rsuser
+*.userprefs
+.idea/
+
+# =============================================
+# Secrets & local settings (never commit these)
+# =============================================
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json
+*.pfx
+
+# =============================================
+# Angular / Node (frontend)
+# =============================================
+node_modules/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+.angular/
+.sass-cache/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+connect.lock
+libpeerconnection.log
+testem.log
+typings/
+__screenshots__/
+
+# =============================================
+# VS Code (keep shared settings, ignore the rest)
+# =============================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/
+
+# Other editors
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# =============================================
+# AWS (SAM / CDK / Terraform / Serverless)
+# =============================================
+.aws-sam/
+cdk.out/
+.serverless/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!example.tfvars
+
+# =============================================
+# OS files
+# =============================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local backups
+_backup*/
