@@ -1,0 +1,133 @@
+<header class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted">Manage your English vocabulary.</p>
+  </div>
+  <a routerLink="/vocabularies/new" class="btn btn-primary">+ Add word</a>
+</header>
+
+<section class="stats" aria-label="Summary">
+  <div class="card stat">
+    <span class="stat-label">Total words</span>
+    <span class="stat-value">{{ totalWords() }}</span>
+  </div>
+  <div class="card stat">
+    <span class="stat-label">Topics in use</span>
+    <span class="stat-value">{{ topicsInUse() }}<span class="stat-of"> / {{ topics().length }}</span></span>
+  </div>
+  <div class="card stat">
+    <span class="stat-label">Word types</span>
+    <span class="stat-value">{{ wordTypes().length }}</span>
+  </div>
+</section>
+
+<div class="dashboard-grid">
+  <section class="card words-card" aria-label="Vocabulary list">
+    <div class="filters">
+      <input
+        type="search"
+        class="input filter-search"
+        placeholder="Search word or meaning…"
+        aria-label="Search word or meaning"
+        [value]="search()"
+        (input)="onSearch($event)"
+      />
+      <select class="input" aria-label="Filter by topic" (change)="onTopicChange($event)">
+        <option value="" [selected]="topicId() === null">All topics</option>
+        @for (topic of topics(); track topic.topicId) {
+          <option [value]="topic.topicId" [selected]="topic.topicId === topicId()">{{ topic.name }}</option>
+        }
+      </select>
+      <select class="input" aria-label="Filter by word type" (change)="onWordTypeChange($event)">
+        <option value="" [selected]="wordTypeId() === null">All word types</option>
+        @for (type of wordTypes(); track type.wordTypeId) {
+          <option [value]="type.wordTypeId" [selected]="type.wordTypeId === wordTypeId()">{{ type.name }}</option>
+        }
+      </select>
+      @if (hasFilters()) {
+        <button type="button" class="btn btn-ghost" (click)="clearFilters()">Clear</button>
+      }
+    </div>
+
+    @if (loadError(); as error) {
+      <div class="state state-error">
+        <p>{{ error }}</p>
+        <button type="button" class="btn" (click)="reload()">Try again</button>
+      </div>
+    } @else if (loading() && words().length === 0) {
+      <div class="state"><p class="muted">Loading words…</p></div>
+    } @else if (words().length === 0) {
+      <div class="state">
+        @if (hasFilters()) {
+          <p>No words match your filters.</p>
+          <button type="button" class="btn" (click)="clearFilters()">Clear filters</button>
+        } @else {
+          <p>No words yet. Add your first one!</p>
+          <a routerLink="/vocabularies/new" class="btn btn-primary">+ Add word</a>
+        }
+      </div>
+    } @else {
+      <div class="table-wrap" [class.is-loading]="loading()">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Word</th>
+              <th scope="col">Meaning</th>
+              <th scope="col">Type</th>
+              <th scope="col">Topic</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (word of words(); track word.vocabularyId) {
+              <tr>
+                <td class="cell-word">{{ word.word }}</td>
+                <td class="cell-meaning">{{ word.meaning }}</td>
+                <td><span class="badge">{{ word.wordTypeName }}</span></td>
+                <td class="nowrap">{{ word.topicName }}</td>
+                <td class="cell-actions">
+                  <a class="btn btn-small" [routerLink]="['/vocabularies', word.vocabularyId, 'edit']">Edit</a>
+                  <button
+                    type="button"
+                    class="btn btn-small btn-danger-ghost"
+                    [disabled]="deletingId() === word.vocabularyId"
+                    (click)="remove(word)"
+                  >
+                    {{ deletingId() === word.vocabularyId ? 'Deleting…' : 'Delete' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="muted table-footer">
+        Showing {{ words().length }} {{ words().length === 1 ? 'word' : 'words' }}
+        @if (hasFilters()) { (filtered) }
+      </p>
+    }
+  </section>
+
+  <aside class="card chart-card" aria-labelledby="chart-title">
+    <h2 id="chart-title" class="card-title">Words by topic</h2>
+    <p class="muted chart-hint">Click a topic to filter the list.</p>
+    <ul class="bars">
+      @for (topic of topicsByCount(); track topic.topicId) {
+        <li>
+          <button
+            type="button"
+            class="bar-row"
+            [class.selected]="topicId() === topic.topicId"
+            [attr.aria-pressed]="topicId() === topic.topicId"
+            [title]="topic.name + ': ' + topic.vocabularyCount + ' words'"
+            (click)="toggleTopic(topic.topicId)"
+          >
+            <span class="bar-label">{{ topic.name }}</span>
+            <span class="bar-value">{{ topic.vocabularyCount }}</span>
+            <span class="bar-track"><span class="bar-fill" [style.width.%]="barWidth(topic.vocabularyCount)"></span></span>
+          </button>
+        </li>
+      }
+    </ul>
+  </aside>
+</div>

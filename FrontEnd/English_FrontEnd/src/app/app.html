@@ -1,0 +1,19 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <a routerLink="/" class="brand">
+      <span class="brand-mark" aria-hidden="true">Aa</span>
+      English Vocabulary
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/vocabularies/new" routerLinkActive="active">Add word</a>
+    </nav>
+  </div>
+</header>
+
+<main class="content">
+  <router-outlet />
+</main>
+
+<app-toast-container />
+<app-confirm-dialog />

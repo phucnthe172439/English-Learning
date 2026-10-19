@@ -1,0 +1,84 @@
+<a routerLink="/" class="back-link">← Back to dashboard</a>
+
+<header class="page-header">
+  <div>
+    <h1>{{ isEdit ? 'Edit word' : 'Add a new word' }}</h1>
+    <p class="muted">
+      {{ isEdit ? 'Change the details and save.' : 'Fill in the word, its meaning, type and topic.' }}
+    </p>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="card state"><p class="muted">Loading…</p></div>
+} @else {
+  <form class="card form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="field">
+      <label for="word">Word</label>
+      <input
+        id="word"
+        class="input"
+        formControlName="word"
+        autocomplete="off"
+        placeholder="e.g. breakfast"
+        [attr.aria-invalid]="showError('word')"
+      />
+      @if (showError('word')) {
+        <p class="field-error">Please enter a word (max 100 characters).</p>
+      }
+    </div>
+
+    <div class="field">
+      <div class="label-row">
+        <label for="meaning">Meaning</label>
+        <span class="muted counter">{{ form.controls.meaning.value.length }} / 500</span>
+      </div>
+      <textarea
+        id="meaning"
+        class="input"
+        rows="3"
+        formControlName="meaning"
+        placeholder="e.g. bữa sáng"
+        [attr.aria-invalid]="showError('meaning')"
+      ></textarea>
+      @if (showError('meaning')) {
+        <p class="field-error">Please enter a meaning (max 500 characters).</p>
+      }
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="wordTypeId">Word type</label>
+        <select id="wordTypeId" class="input" formControlName="wordTypeId" [attr.aria-invalid]="showError('wordTypeId')">
+          <option [ngValue]="0" disabled>Choose a word type</option>
+          @for (type of wordTypes(); track type.wordTypeId) {
+            <option [ngValue]="type.wordTypeId">{{ type.name }}</option>
+          }
+        </select>
+        @if (showError('wordTypeId')) {
+          <p class="field-error">Please choose a word type.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="topicId">Topic</label>
+        <select id="topicId" class="input" formControlName="topicId" [attr.aria-invalid]="showError('topicId')">
+          <option [ngValue]="0" disabled>Choose a topic</option>
+          @for (topic of topics(); track topic.topicId) {
+            <option [ngValue]="topic.topicId">{{ topic.name }}</option>
+          }
+        </select>
+        @if (showError('topicId')) {
+          <p class="field-error">Please choose a topic.</p>
+        }
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a routerLink="/" class="btn">Cancel</a>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : isEdit ? 'Save changes' : 'Add word' }}
+      </button>
+    </div>
+  </form>
+}
