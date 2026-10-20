@@ -135,3 +135,9 @@ Desktop.ini
 
 # Local backups
 _backup*/
+
+# Docker
+# Local-only compose overrides and exported image archives (docker save -o *.tar)
+docker-compose.override.yml
+compose.override.yml
+*.tar

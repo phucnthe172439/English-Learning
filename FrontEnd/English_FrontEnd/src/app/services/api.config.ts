@@ -1,5 +1,6 @@
 /**
  * Base URL of the Learning_EngLish API.
- * Start it with: dotnet run --launch-profile https   (inside WFMTTC_API/Learning_EngLish)
+ * Docker:  docker run ... -p 5048:8080 english-api
+ * Local:   dotnet run --launch-profile http   (inside WFMTTC_API/Learning_EngLish)
  */
-export const API_BASE_URL = 'https://localhost:7051/api';
+export const API_BASE_URL = 'http://localhost:5048/api';

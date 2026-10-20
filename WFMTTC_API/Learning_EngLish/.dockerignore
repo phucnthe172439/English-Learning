@@ -1,0 +1,19 @@
+# Build output (the image builds its own)
+bin/
+obj/
+
+# IDE / local files
+.vs/
+.vscode/
+*.user
+*.http
+Properties/launchSettings.json
+
+# Git and docs
+.git/
+.gitignore
+*.md
+
+# Docker files themselves
+Dockerfile
+.dockerignore

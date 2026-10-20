@@ -13,12 +13,13 @@ builder.Services.AddScoped<VocabularyRepository>();
 builder.Services.AddScoped<TopicRepository>();
 builder.Services.AddScoped<WordTypeRepository>();
 
-// Allow the Angular dev server to call this API from the browser.
+// Allow the Angular app to call this API from the browser:
+// 4200 = ng serve (local dev), 4000 = frontend Docker container.
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy => policy
-        .WithOrigins("http://localhost:4200")
+        .WithOrigins("http://localhost:4200", "http://localhost:4000")
         .AllowAnyHeader()
         .AllowAnyMethod());
 });

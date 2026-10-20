@@ -1,0 +1,20 @@
+# Dependencies and build output (the image installs and builds its own)
+node_modules/
+dist/
+.angular/
+coverage/
+out-tsc/
+
+# IDE / local files
+.vscode/
+.idea/
+*.log
+
+# Git and docs
+.git/
+.gitignore
+*.md
+
+# Docker files themselves
+Dockerfile
+.dockerignore
