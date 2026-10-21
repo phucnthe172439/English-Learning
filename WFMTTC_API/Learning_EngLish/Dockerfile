@@ -20,4 +20,8 @@ COPY --from=build /app .
 
 # ASP.NET in containers listens on port 8080 by default
 EXPOSE 8080
+
+# Run as the image's built-in non-root user ("app"), not root.
+# Works because 8080 is above 1024 and the app doesn't write files.
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Learning_EngLish.dll"]

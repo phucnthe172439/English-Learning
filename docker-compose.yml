@@ -1,0 +1,67 @@
+# Whole project: SQL Server + API + frontend.
+#   docker compose up -d --build     build and start everything
+#   docker compose down              stop and remove the containers (data is kept)
+#   docker compose down -v           ...and delete the database volume (data is LOST)
+# Values like ${SA_PASSWORD} come from the .env file next to this one (see .env.example).
+
+name: english-learning
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: english-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+    ports:
+      - "${DB_PORT:-14330}:1433"
+    volumes:
+      - sqldata:/var/opt/mssql            # data files live in a volume, not in the image
+    healthcheck:
+      # $$ = a literal $, so the variable is read inside the container
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -b -Q \"SELECT 1\" -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # One-shot container: creates the database on first run, then exits
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2025-latest   # reused only for its sqlcmd tool
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+    volumes:
+      - ./database:/scripts:ro
+    entrypoint: ["/bin/bash", "/scripts/init-db.sh"]
+    restart: "no"
+
+  api:
+    build: ./WFMTTC_API/Learning_EngLish
+    image: english-api
+    container_name: english-api
+    ports:
+      - "5048:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # "db" is the service name above: containers on the same Compose network find each other by name
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=EnglishVocabularyTraining;User Id=english_app;Password=${APP_DB_PASSWORD};TrustServerCertificate=True;"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+  frontend:
+    build: ./FrontEnd/English_FrontEnd
+    image: english-frontend
+    container_name: english-frontend
+    ports:
+      - "4000:4000"
+    depends_on:
+      - api
+
+volumes:
+  sqldata:

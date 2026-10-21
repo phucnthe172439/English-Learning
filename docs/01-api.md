@@ -34,7 +34,8 @@ WFMTTC_API/
     ├── DTOs/                       Request/response shapes sent over HTTP
     ├── Data/
     │   ├── SqlConnectionFactory.cs Opens SQL connections from the connection string
-    │   └── SqlErrors.cs            SQL Server error numbers the API reacts to
+    │   ├── SqlErrors.cs            SQL Server error numbers the API reacts to
+    │   └── DatabaseHealthCheck.cs  /health: is SQL Server reachable?
     ├── Models/                     Table classes (from earlier EF scaffolding, not used by the repositories)
     ├── Views/                      Razor views (leftover, not used: the app only maps API controllers)
     │
@@ -215,6 +216,14 @@ Same shape as Topic:
 { "wordTypeId": 1, "name": "noun", "vocabularyCount": 40 }
 ```
 
+### 4.4 Health: `/health`
+
+| Method | URL | Success | Failure |
+|---|---|---|---|
+| GET | `/health` | `200` body `Healthy` | `503` body `Unhealthy` |
+
+Built with `AddHealthChecks()` and one check, `Data/DatabaseHealthCheck.cs`. It opens a connection with the app's connection string (with `Connect Timeout=3`) and runs `SELECT 1`. Use it to check that the API **and** its database work: from a browser, a load balancer, or later the App Runner health check (week 2). The response says only Healthy or Unhealthy. The error details go to the API log (`docker compose logs api`), not to the caller.
+
 ---
 
 ## 5. Error handling
@@ -281,6 +290,34 @@ A double underscore `__` in an environment variable name stands for one level of
 |---|---|
 | `Development` | Swagger UI at `/swagger`, OpenAPI JSON at `/openapi/v1.json` |
 | anything else (default `Production`) | No Swagger |
+
+### Logs
+
+The API writes logs to the **console** (stdout) only, not to files. Whoever runs the app collects them:
+
+| How the API runs | Where to read the logs |
+|---|---|
+| Docker Compose | `docker compose logs api` (`-f` to follow, `--since 10m`, `--tail 50`) |
+| Visual Studio | **Output** window (Show output from: *ASP.NET Core Web Server*) or the console window |
+| `dotnet run` | The terminal |
+| AWS App Runner (week 2–3) | CloudWatch Logs, collected automatically from stdout |
+
+Docker keeps container logs inside Docker Desktop's VM. On this PC the log driver is `local`, which rotates automatically (5 files × 20 MB, compressed), so logs can't fill the disk. To keep a copy: `docker compose logs --no-color api > api.log`.
+
+**What's logged:**
+
+| What | Category | Level |
+|---|---|---|
+| Startup / shutdown | `Microsoft.Hosting.Lifetime` | Information |
+| **One line per request**: method, path, status code, duration (ms). No headers, bodies or query strings | `Microsoft.AspNetCore.HttpLogging` | Information |
+| `/health` failures (with the SQL error) | `Microsoft.Extensions.Diagnostics.HealthChecks` | Error |
+| Other ASP.NET internals | `Microsoft.AspNetCore` | Warning and above only |
+
+Request logging is configured in `Program.cs` (`AddHttpLogging` + `UseHttpLogging`). `/health` is excluded with `.WithHttpLogging(HttpLoggingFields.None)`, because platforms call it every few seconds.
+
+Change levels without rebuilding, through environment variables, for example `Logging__LogLevel__Default=Debug` (see [05-t4-deep-dive.md A1](05-t4-deep-dive.md#a1-who-wins-change-a-setting-without-rebuilding)).
+
+The warning `Failed to determine the https port for redirect` at startup is harmless in Docker: the container only serves HTTP on 8080, so `UseHttpsRedirection()` has nothing to redirect to.
 
 ---
 

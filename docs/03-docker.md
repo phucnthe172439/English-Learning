@@ -3,6 +3,8 @@
 This guide explains how to build the **API** and the **frontend** into Docker images, run them as containers, update them after code changes, and push the images to a registry (Docker Hub or AWS ECR).
 
 > **Current setup:** the API and the frontend run in Docker. **SQL Server stays on your PC** (it isn't containerized), and the API container connects to it.
+>
+> To run SQL Server in Docker too, with everything started by one `docker compose up`, see [04-database-docker.md](04-database-docker.md).
 
 ---
 
@@ -129,6 +131,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0         # small image: runtime only, n
 WORKDIR /app
 COPY --from=build /app .                          # take ONLY the compiled output from stage 1
 EXPOSE 8080                                       # ASP.NET in containers listens on 8080
+USER $APP_UID                                     # run as the built-in non-root user "app" (uid 1654)
 ENTRYPOINT ["dotnet", "Learning_EngLish.dll"]
 ```
 
@@ -162,7 +165,8 @@ CMD ["node", "dist/English_FrontEnd/server/server.mjs"]   # start the SSR Expres
 
 Before building, Docker sends the whole folder (the **build context**) to the Docker engine. Without `.dockerignore`:
 - `node_modules/` (hundreds of MB) would be sent on every build, which is slow,
-- your local `bin/`/`obj/`/`dist/` could overwrite the fresh build inside the image.
+- your local `bin/`/`obj/`/`dist/` could overwrite the fresh build inside the image,
+- a `.env` file with real passwords could end up inside the image, readable by anyone who pulls it. Both `.dockerignore` files exclude `.env` and `.env.*`.
 
 ---
 
@@ -376,7 +380,9 @@ docker compose up -d --build    # build + start everything
 docker compose down             # stop and remove everything
 ```
 
-Planned layout (not added yet):
+> **Done:** `docker-compose.yml` now exists at the repo root and also includes SQL Server. See [04-database-docker.md](04-database-docker.md). The sketch below is the original plan.
+
+Planned layout:
 
 ```yaml
 services:

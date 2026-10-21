@@ -10,6 +10,10 @@ out-tsc/
 .idea/
 *.log
 
+# Secrets: never copy into an image
+.env
+.env.*
+
 # Git and docs
 .git/
 .gitignore

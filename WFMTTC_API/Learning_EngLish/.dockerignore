@@ -9,6 +9,11 @@ obj/
 *.http
 Properties/launchSettings.json
 
+# Secrets: never copy into an image
+.env
+.env.*
+secrets.json
+
 # Git and docs
 .git/
 .gitignore
