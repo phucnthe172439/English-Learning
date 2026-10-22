@@ -296,9 +296,9 @@ nameserver 127.0.0.11
 172.18.0.4      frontend
 ```
 
-`127.0.0.11` is **Docker's built-in DNS server**, which exists on every user-defined network. Compose creates `english-learning_default` and registers every **service name** in it. That's why the connection string says `Server=db`. IPs change on every restart; names don't.
+`127.0.0.11` is **Docker's built-in DNS server**, which exists on every user-defined network. Compose creates `english-learning_db-net` and `english-learning_web-net` and registers each **service name** on the networks it joins. The API is on both, so it resolves `db` **and** `frontend`. That's why the connection string says `Server=db`. IPs change on every restart; names don't.
 
-Try `docker network inspect english-learning_default` and find the three containers with their IPs.
+Try `docker network inspect english-learning_db-net` and `docker network inspect english-learning_web-net`, and find which containers are on each, with their IPs. Then run `docker compose exec frontend getent hosts db`: it prints nothing, because the frontend isn't on `db-net`.
 
 ### C2. `ports:` is a door to the outside, and it's open wider than you think
 

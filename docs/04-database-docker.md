@@ -91,17 +91,20 @@ So the scripts **only build an empty database once**. After that, your data live
 │  Browser ──► localhost:5048 (API)                                │
 │  DBeaver ──► localhost:14330 (SQL Server in Docker)              │
 │                                                                  │
-│  ┌──────── Docker network "english-learning_default" ────────┐   │
-│  │ frontend :4000   api :8080 ──── db:1433 ────► db  :1433   │   │
-│  │                                               │ volume    │   │
-│  │ db-init (runs scripts once, then exits) ──────┘ sqldata   │   │
-│  └───────────────────────────────────────────────────────────┘   │
+│  ┌─── web-net ───────────────┐                                   │
+│  │ frontend :4000            │                                   │
+│  │            ┌──────────────┼──────────────────────────────┐    │
+│  │            │ api :8080    │ ──── db:1433 ────► db  :1433 │    │
+│  └────────────┼──────────────┘                    │ volume  │    │
+│               │ db-init (runs once, then exits) ──┘ sqldata │    │
+│               └─────────────────────────────────── db-net ──┘    │
 │                                                                  │
 │  SQL Server 2025 Express installed on the PC (unchanged, :1433)  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-* Containers in one Compose project share a network and find each other **by service name**. That's why the API's connection string says `Server=db,1433`, not `host.docker.internal`.
+* Containers on the **same network** find each other **by service name**. That's why the API's connection string says `Server=db,1433`, not `host.docker.internal`.
+* There are two networks: `db-net` (db, db-init, api) and `web-net` (api, frontend). The API is on both. The frontend is only on `web-net`, so it can't reach the database even if it's compromised.
 * The container's SQL Server is published on PC port **14330**, because your PC's own SQL Server already uses 1433. Both can run at the same time.
 * Start order is enforced: `db` must be **healthy** → `db-init` must **finish successfully** → `api` starts → `frontend` starts.
 
@@ -402,12 +405,12 @@ The file is in the repo root: `C:\Mini-Project\WFMTTC\English-Learning\docker-co
 | `-e KEY=value` | `environment: { KEY: value }` |
 | `-v sqldata:/var/opt/mssql` | `volumes: [sqldata:/var/opt/mssql]` |
 | `docker build -t english-api ./folder` | `build: ./folder` + `image: english-api` |
-| `docker network create` + `--network` | automatic: one network per project |
+| `docker network create` + `--network` | `networks:` at the top level + `networks:` per service (without it, Compose puts every service on one `default` network) |
 
 What `docker compose up` does:
 
 1. Reads `.env` and fills in every `${...}`.
-2. Creates the network `english-learning_default` and the volume `english-learning_sqldata` (prefix = `name:` at the top of the file).
+2. Creates the networks `english-learning_db-net` and `english-learning_web-net`, and the volume `english-learning_sqldata` (prefix = `name:` at the top of the file).
 3. Pulls the SQL Server image. Builds the API and frontend images if they don't exist yet (`--build` forces a rebuild).
 4. Starts the services in order:
 

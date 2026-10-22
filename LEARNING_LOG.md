@@ -46,7 +46,7 @@ Run with the API up (`docker compose up -d`, or F5 in Visual Studio).
 | Unknown id → 404 | `GET /api/Vocabulary/999999` | [ ] |
 | Create a word without `word` → 400 | `POST /api/Vocabulary` with `{"meaning":"x","wordTypeId":1,"topicId":1}` | [ ] |
 | Deleting a topic that has words is handled consistently, reason documented | `DELETE /api/Topic/{id}` → 409 "This topic still has words…"; reason above and in the README | [ ] |
-| Repo on GitHub, README explains how to run | [Frontend README](FrontEnd/English_FrontEnd/README.md), [docs/](docs/) | [ ] |
+| Repo on GitHub, README explains how to run | [README.md](README.md): quick start, `.env`, dev setup, delete rule; plus [frontend README](FrontEnd/English_FrontEnd/README.md) and [docs/](docs/) | [ ] |
 
 ### What I learned
 _In my own words:_

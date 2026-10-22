@@ -1,6 +1,7 @@
 using Learning_EngLish.Data;
 using Learning_EngLish.Repositories;
 using Microsoft.AspNetCore.HttpLogging;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,15 @@ builder.Services.AddOpenApi();
 // ADO.NET data access: one connection factory for the whole app,
 // one repository per request (Scoped).
 builder.Services.AddSingleton<SqlConnectionFactory>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+{
+    var connectionString =
+        builder.Configuration["Redis:ConnectionString"]
+        ?? "localhost:6379";
+
+    return ConnectionMultiplexer.Connect(connectionString);
+});
+
 builder.Services.AddScoped<VocabularyRepository>();
 builder.Services.AddScoped<TopicRepository>();
 builder.Services.AddScoped<WordTypeRepository>();
@@ -56,7 +66,16 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "Learning English API");
     });
 }
+app.MapGet("/redis-test", async (IConnectionMultiplexer redis) =>
+{
+    var db = redis.GetDatabase();
 
+    await db.StringSetAsync("message", "Hello Redis!");
+
+    var value = await db.StringGetAsync("message");
+
+    return Results.Ok(new { value = value.ToString() });
+});
 app.UseHttpsRedirection();
 
 app.UseCors("Frontend");
