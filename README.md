@@ -87,6 +87,7 @@ To point the API at the Docker database, set its connection string as a **user s
 | [04 · Database on Docker](docs/04-database-docker.md) | Compose, `.env`, backup and restore, connecting with DBeaver or Visual Studio |
 | [05 · T4 deep dive](docs/05-t4-deep-dive.md) | Labs: configuration, health checks, Compose internals |
 | [06 · Known issues](docs/06-known-issues.md) | Risks and their status (data loss, ports, passwords) |
+| [07 · AWS: EC2 + RDS + Secrets Manager](docs/07-aws-ec2-rds.md) | Deploy the API to an existing EC2, database on RDS, passwords in Secrets Manager (Vietnamese) |
 | [Course schedule](docs/Guides/guides.md) | Weekly milestones and daily criteria |
 | [LEARNING_LOG.md](LEARNING_LOG.md) | What I did and learned each day |
 
@@ -101,7 +102,7 @@ English-Learning/
 │   └── Learning_EngLish/     API (Dockerfile inside)
 ├── FrontEnd/
 │   └── English_FrontEnd/     Angular app (Dockerfile inside)
-├── docs/                     guides 01–06, course schedule
+├── docs/                     guides 01–07, course schedule
 └── LEARNING_LOG.md
 ```
 
