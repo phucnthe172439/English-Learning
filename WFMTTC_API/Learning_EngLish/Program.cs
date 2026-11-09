@@ -1,9 +1,28 @@
 using Learning_EngLish.Data;
 using Learning_EngLish.Repositories;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.Data.SqlClient;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// On AWS ECS: the task definition injects each key of the Secrets Manager secret
+// as Database__Host / __Port / __Name / __User / __Password, and the connection string is built here,
+// so the password never appears in the task definition.
+// Locally Database:Host is not set, so ConnectionStrings:DefaultConnection (appsettings / .env) is used as before.
+var dbHost = builder.Configuration["Database:Host"];
+if (!string.IsNullOrWhiteSpace(dbHost))
+{
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = new SqlConnectionStringBuilder
+    {
+        DataSource = $"{dbHost},{builder.Configuration["Database:Port"] ?? "1433"}",
+        InitialCatalog = builder.Configuration["Database:Name"],
+        UserID = builder.Configuration["Database:User"],
+        Password = builder.Configuration["Database:Password"],
+        Encrypt = SqlConnectionEncryptOption.Mandatory,   // traffic to RDS is encrypted
+        TrustServerCertificate = true,                    // skip RDS certificate check (acceptable inside the VPC)
+    }.ConnectionString;
+}
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

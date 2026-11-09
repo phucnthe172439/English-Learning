@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { request as httpRequest } from 'node:http';
 import { join } from 'node:path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -13,16 +14,45 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Health check for the AWS load balancer. Answered here, before Angular, because the ALB calls the task
+ * by its private IP and Angular's SSR host check (NG_ALLOWED_HOSTS) rejects that Host header with 400.
  */
+app.get('/healthz', (_req, res) => {
+  res.status(200).send('ok');
+});
+
+/**
+ * Forward /api/* to the API, so the browser only ever talks to this server (no CORS, no hardcoded API host).
+ *   docker compose: API_URL=http://api:8080
+ *   ng serve:       default http://localhost:5048
+ * On AWS ECS the load balancer routes /api/* to the API service before it reaches here.
+ */
+const apiTarget = new URL(process.env['API_URL'] ?? 'http://localhost:5048');
+
+app.use('/api', (req, res) => {
+  const upstream = httpRequest(
+    {
+      hostname: apiTarget.hostname,
+      port: apiTarget.port,
+      path: req.originalUrl, // still starts with /api
+      method: req.method,
+      headers: { ...req.headers, host: apiTarget.host },
+    },
+    (apiRes) => {
+      res.writeHead(apiRes.statusCode ?? 502, apiRes.headers);
+      apiRes.pipe(res);
+    },
+  );
+  upstream.on('error', (error) => {
+    console.error(`API proxy error: ${error.message}`);
+    if (!res.headersSent) {
+      res.status(502).json({ message: 'API is unavailable' });
+    } else {
+      res.end();
+    }
+  });
+  req.pipe(upstream);
+});
 
 /**
  * Serve static files from /browser

@@ -1,6 +1,8 @@
 #!/bin/bash
 # Runs inside the one-shot "db-init" container (see docker-compose.yml),
 # after the "db" container reports healthy.
+# On AWS the same script runs against RDS as a one-off ECS task (deploy/ecs/init-db.ps1),
+# with DB_HOST = the RDS endpoint and DB_ADMIN_USER = the RDS master user.
 #
 #   * No tables yet            -> run 01-schema.sql (one transaction: all tables or none).
 #   * Some tables, not all     -> stop with an error: never guess on a half-built database.
@@ -15,7 +17,7 @@ TABLE_COUNT=5
 
 # -C: trust the server's self-signed certificate. -b: stop on the first SQL error.
 run_sql() {
-    /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P "$MSSQL_SA_PASSWORD" -C -b "$@"
+    /opt/mssql-tools18/bin/sqlcmd -S "${DB_HOST:-db}" -U "${DB_ADMIN_USER:-sa}" -P "$MSSQL_SA_PASSWORD" -C -b "$@"
 }
 
 # Prints the single value returned by a query.

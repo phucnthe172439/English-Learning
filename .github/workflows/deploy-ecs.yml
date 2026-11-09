@@ -1,0 +1,50 @@
+# Deploys the API and frontend to AWS ECS whenever code is pushed (merged) to main.
+# Setup guide (one-time AWS + GitHub steps): docs/08-aws-ecs.md, section "CI/CD with GitHub Actions".
+#
+# It runs the same script you run by hand (deploy/ecs/deploy.ps1): build both images, push them to ECR
+# tagged with the commit SHA, register new task definitions, update the ECS services, wait until healthy.
+# If the new tasks never become healthy, ECS rolls back by itself and this job fails.
+name: Deploy to ECS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'WFMTTC_API/**'
+      - 'FrontEnd/**'
+      - 'deploy/ecs/**'
+      - '.github/workflows/deploy-ecs.yml'
+  workflow_dispatch:        # "Run workflow" button: Actions tab -> Deploy to ECS
+
+# Two deploys at once would fight over the same services: queue the second one.
+concurrency:
+  group: deploy-ecs
+  cancel-in-progress: false
+
+permissions:
+  id-token: write           # lets the job ask GitHub for an OIDC token, which AWS trusts (no access keys stored)
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AWS_REGION: ap-southeast-1
+    steps:
+      - uses: actions/checkout@v4
+
+      # Exchanges the OIDC token for short-lived AWS credentials (valid ~1 hour) for the role below.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}     # GitHub: Settings -> Secrets and variables -> Actions -> Variables
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Who am I (sanity check)
+        run: aws sts get-caller-identity
+
+      # The commit SHA is the image tag: every deploy is traceable to a commit, and a rollback is just
+      # "deploy.ps1 -Tag <older sha>" (images stay in ECR).
+      - name: Build, push and deploy
+        shell: pwsh
+        run: ./deploy/ecs/deploy.ps1 -Tag "${{ github.sha }}"
